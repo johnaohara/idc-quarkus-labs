@@ -17,7 +17,7 @@
 FROM fabric8/java-alpine-openjdk8-jre
 ENV JAVA_OPTIONS="-Xmx64m -Djava.security.egd=file:/dev/./urandom"
 ENV AB_OFF=true
-COPY target/todo.jar /deployments/app.jar
+COPY target/vets.jar /deployments/app.jar
 EXPOSE 8080
 
 # run with user 1001 and be prepared for be running in OpenShift too

@@ -17,5 +17,9 @@ function stop_pod {
 stop_pod    spring-boot
 stop_pod    quarkus-jvm
 stop_pod    quarkus-native
+stop_pod    spring-boot-vets
+stop_pod    spring-boot-vets
+stop_pod    quarkus-jvm-vets
+stop_pod    quarkus-native-vets
 
 trap - EXIT

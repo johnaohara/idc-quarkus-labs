@@ -18,6 +18,12 @@ public class TodoResource {
         return Todo.listAll(Sort.by("order"));
     }
 
+    @GET
+    @Path("/{id}")
+    public Todo get(@PathParam("id") Long id) {
+        return Todo.findById(id);
+    }
+
     @PATCH
     @Path("/{id}")
     @Transactional
