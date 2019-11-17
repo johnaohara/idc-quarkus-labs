@@ -196,5 +196,5 @@ create_container_in_pod ${container_quarkus_native_vets_name} ${container_quarku
 echo "Displaying stats for containers: "
   if [ "$DEBUG" = true ]; then echo ""; echo "podman stats --no-stream $(test \"podman\" = \"podman\" && echo \"--no-reset\") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name}"; fi;
 
-podman stats --no-stream $(test "podman" = "podman" && echo "--no-reset") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name}
+podman stats --no-stream $(test "podman" = "podman" && echo "--no-reset") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name} ${container_spring_vets_name} ${container_quarkus_jvm_vets_name} ${container_quarkus_native_vets_name}
 
