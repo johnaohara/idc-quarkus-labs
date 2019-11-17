@@ -163,27 +163,27 @@ function create_container_in_pod {
 # Setup pods and databases
 create_pod                  ${container_quarkus_native_name}  ${container_quarkus_native_port}
 #create_database_container   ${container_quarkus_native_name}  ${psql_db_name}
-prepopulate_database        ${container_quarkus_native_name}
+#prepopulate_database        ${container_quarkus_native_name}
 
 create_pod                  ${container_quarkus_jvm_name}     ${container_quarkus_jvm_port}
 #create_database_container   ${container_quarkus_jvm_name}     ${psql_db_name}
-prepopulate_database        ${container_quarkus_jvm_name}
+#prepopulate_database        ${container_quarkus_jvm_name}
 
 create_pod                  ${container_spring_name}          ${container_spring_port}
 #create_database_container   ${container_spring_name}          ${psql_db_name}
-prepopulate_database        ${container_spring_name}
+#prepopulate_database        ${container_spring_name}
 
 create_pod                  ${container_spring_vets_name}     ${container_spring_vets_port}
 #create_database_container   ${container_spring_vets_name}     ${psql_db_vets_name}
-prepopulate_vets_database   ${container_spring_vets_name}
+#prepopulate_vets_database   ${container_spring_vets_name}
 
 create_pod                  ${container_quarkus_jvm_vets_name}     ${container_quarkus_jvm_vets_port}
 #create_database_container   ${container_quarkus_jvm_vets_name}     ${psql_db_vets_name}
-prepopulate_vets_database   ${container_quarkus_jvm_vets_name}
+#prepopulate_vets_database   ${container_quarkus_jvm_vets_name}
 
 create_pod                  ${container_quarkus_native_vets_name}     ${container_quarkus_native_vets_port}
 #create_database_container   ${container_quarkus_native_vets_name}     ${psql_db_vets_name}
-prepopulate_vets_database   ${container_quarkus_native_vets_name}
+#prepopulate_vets_database   ${container_quarkus_native_vets_name}
 
 
 # Starting the cloud native runtime and wait for first response
