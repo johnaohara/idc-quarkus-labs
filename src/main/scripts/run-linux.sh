@@ -44,7 +44,7 @@ DEBUG=false
 function create_database_container {
   printf "Starting PostgreSQL database $2 in pod $1 "
 #  podman run --ulimit memlock=-1:-1 -d --rm=true --pod=$1-pod --memory-swappiness=0 --name $1-db -e POSTGRES_USER=${psql_db_user} -e POSTGRES_PASSWORD=${psql_db_password} -e POSTGRES_DB=$2 postgres:10.5 > /dev/null
-  if [ "$DEBUG" = true ]; then echo ""; echo "podmanrun -d --rm=true --pod=$1-pod --memory-swappiness=0 --name $1-db -e POSTGRES_USER=${psql_db_user} -e POSTGRES_PASSWORD=${psql_db_password} -e POSTGRES_DB=$2 postgres:10.5"; fi;
+  if [ "$DEBUG" = true ]; then echo ""; echo "podman run -d --rm=true --pod=$1-pod --memory-swappiness=0 --name $1-db -e POSTGRES_USER=${psql_db_user} -e POSTGRES_PASSWORD=${psql_db_password} -e POSTGRES_DB=$2 postgres:10.5"; fi;
 
   podman run -d --rm=true --pod=$1-pod --memory-swappiness=0 --name $1-db -e POSTGRES_USER=${psql_db_user} -e POSTGRES_PASSWORD=${psql_db_password} -e POSTGRES_DB=$2 postgres:10.5 > /dev/null
   # Waiting for the database to start
@@ -131,7 +131,7 @@ function execute_db_statement {
 
 function create_pod {
   printf "Creating pod $1 using port $2 \t"
-  if [ "$DEBUG" = true ]; then echo ""; echo "podmanpod create --name=$1-pod -p $2"; fi;
+  if [ "$DEBUG" = true ]; then echo ""; echo "podman pod create --name=$1-pod -p $2"; fi;
   podman pod create --name=$1-pod -p $2 > /dev/null
   echo "[DONE]"
 }
@@ -145,7 +145,7 @@ function create_container_in_pod {
   local env="$*"
   
   printf "Starting ${image} container in pod ${name}-pod using port ${port} "
-  if [ "$DEBUG" = true ]; then echo ""; echo "podmanrun -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} --pod=\"${name}-pod\" --name=${name} ${env} ${image}"; fi;
+  if [ "$DEBUG" = true ]; then echo ""; echo "podman run -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} --pod=\"${name}-pod\" --name=${name} ${env} ${image}"; fi;
   podman run -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} --pod="${name}-pod" --name=${name} ${env} ${image} > /dev/null
   while ! (curl -sf http://localhost:${port}${endpoint} > /dev/null)
   do
@@ -194,7 +194,7 @@ create_container_in_pod ${container_quarkus_jvm_vets_name} ${container_quarkus_j
 create_container_in_pod ${container_quarkus_native_vets_name} ${container_quarkus_native_vets_image} ${container_quarkus_native_vets_port} "/vets" -e QUARKUS_HTTP_PORT=${container_quarkus_native_vets_port} -e QUARKUS_DATASOURCE_URL=jdbc:postgresql://${psql_db_host}/${psql_db_vets_name}
 
 echo "Displaying stats for containers: "
-  if [ "$DEBUG" = true ]; then echo ""; echo "podmanstats --no-stream $(test \"podman\" = \"podman\" && echo \"--no-reset\") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name}"; fi;
+  if [ "$DEBUG" = true ]; then echo ""; echo "podman stats --no-stream $(test \"podman\" = \"podman\" && echo \"--no-reset\") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name}"; fi;
 
 podman stats --no-stream $(test "podman" = "podman" && echo "--no-reset") ${container_spring_name} ${container_quarkus_jvm_name} ${container_quarkus_native_name}
 
