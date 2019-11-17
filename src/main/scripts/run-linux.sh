@@ -30,11 +30,12 @@ container_quarkus_native_vets_image=quarkus-native/vets
 container_cpu_limit=2
 container_memory_limit=500M
 
-psql_db_name=todo-db
-psql_db_vets_name=vets-db
-psql_db_host=localhost
+psql_db_name=todo
+psql_db_vets_name=vets
 psql_db_user=todo
 psql_db_password=todo
+
+psql_db_host=192.168.0.70
 
 DEBUG=false
 
