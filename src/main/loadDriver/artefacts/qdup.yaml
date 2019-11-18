@@ -1,0 +1,256 @@
+name: REST CRUD performance benchmark
+scripts:
+
+  upload-start-hyperfoil:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}
+    - sh: mkdir ${{HYPERFOIL_DIR}}
+    - sh: cd ${{HYPERFOIL_DIR}}
+    # - upload: ${{ENV.SCRIPT_DIR}}/assets/hyperfoil-0.4.zip ${{IDC_LAB_BASE_DIR:/tmp}}/${{HYPERFOIL_DIR}}
+    - sh: unzip -o hyperfoil-0.4.zip
+    - sh: cd hyperfoil-0.4/bin
+    - sh: nohup ./standalone.sh > /tmp/hyperfoil.out &
+    - sh: HYPERFOIL_PID=$(ps -AF | grep [i]o.hyperfoil.standalone | awk '{print $2}')
+    - sh: echo $HYPERFOIL_PID
+      then:
+        - set-state: RUN.HYPERFOIL_PID
+    - sh: bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://${{HYPERFOIL_HOST}}:8090/)" != "200" ]]; do sleep 1; done' #curl hyperfoil endpoint until it is up
+    # - signal: HYPERFOIL_UPLOAD_DONE 
+
+  take-down-hyperfoil:
+    - sh: kill -15 ${{HYPERFOIL_PID}}
+
+  build-tests:
+    - sh: if [ -d "${{IDC_LAB_BASE_DIR:/tmp}}/${{DEMO_APP_DIR}}" ]; then rm -Rf ${{IDC_LAB_BASE_DIR:/tmp}}/${{DEMO_APP_DIR}}; fi
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}
+    - sh: mkdir ${{DEMO_APP_DIR}}
+    - sh: cd ${{DEMO_APP_DIR}}
+    - sh: git clone ${{DEMO_APP_GIT_REPO}}
+    - sh: basename ${{DEMO_APP_GIT_REPO}} .git
+    - set-state: RUN.IDC_APP_DIR
+    - sh: cd ${{DEMO_APP_DIR}}
+    - sh: git checkout -t origin/${{DEMO_APP_GIT_BRANCH}}
+    # - sh: ${{BUILD_COMMAND}} #TODO:// change Xmx for applications
+    - signal: DEMO_APP_BUILD_DONE
+
+  restart-pods:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}/${{DEMO_APP_DIR}}/${{IDC_APP_DIR}}
+    - for-each: TARGET ${{TARGETS}}
+      then:
+      - for-each: USER ${{USERS}}
+        then:
+          - set-signal: ${{TARGET.name}}-${{USER.count}}-POD-RESTART 1
+          - set-signal: ${{TARGET.name}}-${{USER.count}}-POD-RESTART-DONE 1
+          - wait-for: ${{TARGET.name}}-${{USER.count}}-POD-RESTART
+          # - sh: ${{POD_RESTART_COMMAND}} 
+          - signal: ${{TARGET.name}}-${{USER.count}}-POD-RESTART-DONE
+
+  take-down-pods:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}/${{DEMO_APP_DIR}}/${{IDC_APP_DIR}}
+    - sh: ${{STOP_POD_COMMAND}} #TODO:// change Xmx for applications
+
+  create-benchmark-definitions:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}
+    - sh: mkdir -p client/benchmark
+    - sh: cd client/benchmark
+    - queue-download: ${{IDC_LAB_BASE_DIR:/tmp}}/client/benchmark
+    - sh: rm -Rf ./*.json   
+    - upload: ${{ENV.SCRIPT_DIR}}/assets/vets.template.json ${{IDC_LAB_BASE_DIR:/tmp}}/client/benchmark
+    # - wait-for: HYPERFOIL_UPLOAD_DONE
+    - for-each: TARGET ${{TARGETS}}
+      then:
+        - for-each: USER ${{USERS}}
+          then:
+            - sh: cp -f vets.template.json vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: sed -i 's/{RUNTIME}/${{TARGET.name}}/g' vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: sed -i 's/{USERS}/${{USER.count}}/g' vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: sed -i 's/{HOST}/${{APP_SERVER}}/g' vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: sed -i 's/{PORT}/${{TARGET.port}}/g' vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: sed -i 's/{SHARED_CONNECTIONS}/${{USER.sharedConnections}}/g' vets_${{TARGET.name}}_${{USER.count}}.json
+            - sh: "curl -X POST --header 'Content-Type: application/json'  -d @vets_${{TARGET.name}}_${{USER.count}}.json http://${{HYPERFOIL_HOST}}:8090/benchmark"
+              then:
+                - regex: Internal Server Error
+                  then:
+                      - abort: Failed to upload benchmark definition
+                - regex: Failed to connect
+                  then:
+                      - abort: Failed to upload benchmark definition
+    - signal: BENCHMARK_DEFINITIONS_DONE
+
+  upload-report-generator:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}} 
+    - upload: ${{ENV.SCRIPT_DIR}}/assets/hyperfoilReportGenerator.jar ${{IDC_LAB_BASE_DIR:/tmp}}
+
+  run-benchmarks:
+    - sh: cd ${{IDC_LAB_BASE_DIR:/tmp}}
+    - sh: mkdir -p client/runs
+    - sh: cd client/runs
+    - sh: rm -Rf ./*
+    # - queue-download: ${{IDC_LAB_BASE_DIR:/tmp}}/client/runs
+    - for-each: TARGET ${{TARGETS}}
+      then:
+      - set-state: VALUES ''
+      - for-each: USER ${{USERS}}
+        then:
+          - set-signal: ${{TARGET.name}}-${{USER.count}}-RUN_DONE 1
+          - set-signal: ${{TARGET.name}}-${{USER.count}}-STATS_DONE 1
+          - signal: ${{TARGET.name}}-${{USER.count}}-POD-RESTART
+          # - wait-for: ${{TARGET.name}}-${{USER.count}}-POD-RESTART-DONE
+          - signal: ${{TARGET.name}}-${{USER.count}}-STARTED
+          - sh: curl http://localhost:8090/benchmark/vets_${{TARGET.name}}_${{USER.count}}/start
+            then:
+              - regex: .*run ID (?<runid>(([0-9]|[A-F])*))
+              - set-state: RUN.RUN_ID ${{runid}}
+          - sh: while [[ $(curl -s http://localhost:8090/run/${{RUN_ID}} | jq -r '.agents[0].status') != "STOPPED" ]]; do sleep 5; done
+          - signal: ${{TARGET.name}}-${{USER.count}}-DONE
+          - sh: mkdir vets_${{TARGET.name}}_${{USER.count}}
+          - queue-download: ${{IDC_LAB_BASE_DIR:/tmp}}/client/runs/vets_${{TARGET.name}}_${{USER.count}}
+          - sh: cp -f ${{HYPERFOIL_RUN_DIR:/tmp/hyperfoil}}/run/${{RUN_ID}}/stats/all.json vets_${{TARGET.name}}_${{USER.count}}/
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.responseCount / (.end - .start ) * 1000 ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_TROUGHPUT
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="HB" metricName="Throughput" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_TROUGHPUT}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.invalid ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_INVALID
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Invalid_count" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_INVALID}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.resetCount ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_RESET_COUNT
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Resets" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_RESET_COUNT}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.timeouts ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_TIMEOUTS
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Timeouts" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_TIMEOUTS}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.blockedCount ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_BLOCKED_COUNT
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Blocked_count" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_BLOCKED_COUNT}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.meanResponseTime / 1000000' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_MEAN_RESPONSE
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Response_time_mean" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_MEAN_RESPONSE}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: jq ' .total[] | select (.phase | contains("steadyState")) | .summary.percentileResponseTime."99.99" / 1000000 ' < vets_${{TARGET.name}}_${{USER.count}}/all.json
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_99_99_RESPONSE
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Response_time_9999" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_99_99_RESPONSE}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: java -jar ${{IDC_LAB_BASE_DIR:/tmp}}/hyperfoilReportGenerator.jar -s vets_${{TARGET.name}}_${{USER.count}} -d vets_${{TARGET.name}}_${{USER.count}}/index.html
+          - signal: ${{TARGET.name}}-${{USER.count}}-RUN_DONE
+          - wait-for: ${{TARGET.name}}-${{USER.count}}-STATS_DONE
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="RSS_mean" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_MEAN_RSS}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="RSS_max" result="${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_MAX_RSS}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+          - sh: rq_sec=$(echo "scale=5; ${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_TROUGHPUT}} / ${{vets_${{TARGET.name}}_${{USER.count}}_RESULT_MAX_RSS}}" | bc -l); echo $rq_sec
+            then: 
+              - set-state: vets_${{TARGET.name}}_${{USER.count}}_REQ_SEC_MB
+          - set-state: 
+              key: VALUES 
+              value: ${{VALUES}}<value metricComparator="LB" metricName="Req_Sec_Mb" result="${{vets_${{TARGET.name}}_${{USER.count}}_REQ_SEC_MB}}"><parameters><parameter name="users" value="${{USER.count}}"/></parameters></value>
+              silent: true          
+      - sh: date +%FT%TZ
+        then:
+          - set-state: RUN.TIMESTAMP
+      - sh: >
+          curl -H "Content-Type: text/xml" 
+          -H "Authorization: Basic $(echo -n perfrepouser:perfrepouser1. | base64)" 
+          -d '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <testExecution name="${{TARGET.name}}" started="${{RUN.TIMESTAMP}}" testId="5" testUid="idc_quarkus_lab">
+          <parameters/>
+          <tags><tag name="${{TARGET.name}}"/><tag name="idc"/><tag name="vets"/><tag name="cpu4"/></tags>
+          <values>${{VALUES}}</values>
+          </testExecution>'  
+          http://benchserver1.perf.lab.eng.rdu2.redhat.com:8090/rest/testExecution/create  
+    - signal: BENCHMARKS_DONE
+
+
+  gather-podman-stats:
+    - sh: cd ${{PODMAN_STATS_BASE_DIR:/tmp}}    
+    - sh: mkdir podmanStats
+    - sh: cd podmanStats
+    - for-each: TARGET ${{TARGETS}}
+      then:
+      - for-each: USER ${{USERS}}
+        then:
+          - set-signal: ${{TARGET.name}}-${{USER.count}}-STARTED 1
+          - wait-for: ${{TARGET.name}}-${{USER.count}}-STARTED
+          - sh: podman stats ${{TARGET.name}}-vets >  ${{TARGET.name}}-${{USER.count}}.stats &
+          - sh: STATS_PID=$!
+          - wait-for: ${{TARGET.name}}-${{USER.count}}-RUN_DONE
+          - sh: grep "^[^ID]" ${{TARGET.name}}-${{USER.count}}.stats | awk '{print $4}' | sed 's/MB//' | grep "^[^--]" | awk 'n <$0 {n=$0}END{print n}' #find max rss from podman stats
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_MAX_RSS
+          - sh: grep "^[^ID]" ${{TARGET.name}}-${{USER.count}}.stats | awk '{print $4}' | sed 's/MB//' | grep "^[^--]" | awk '{n=n+$0; count++}END{print n /count}' # calc mean rss from podman stats
+          - set-state: RUN.vets_${{TARGET.name}}_${{USER.count}}_RESULT_MEAN_RSS
+          - sh: kill -15 $STATS_PID
+          - signal: ${{TARGET.name}}-${{USER.count}}-STATS_DONE
+
+
+hosts:
+  client: root@benchclient1.perf.lab.eng.rdu2.redhat.com:22
+  server: root@benchserver2.perf.lab.eng.rdu2.redhat.com:22
+  
+roles:
+  client:
+    hosts: [client]
+    setup-scripts:
+      # - upload-start-hyperfoil:
+      #     with:
+      #       HYPERFOIL_HOST: localhost
+      # - upload-report-generator
+      - create-benchmark-definitions:
+          with: 
+            HYPERFOIL_HOST: localhost
+    run-scripts: 
+      - run-benchmarks
+    cleanup-scripts:
+      - take-down-hyperfoil
+
+  server:
+    hosts: [server]
+    # setup-scripts:
+    #   - build-tests
+    run-scripts: 
+      # - restart-pods
+      - gather-podman-stats
+    cleanup-scripts:
+      - take-down-pods
+
+states:
+
+  HYPERFOIL_RELEASE_API_URL: https://api.github.com/repos/Hyperfoil/Hyperfoil/releases/latest
+  HYPERFOIL_DIR: hyperfoil-ldc
+  
+  DEMO_APP_DIR: demo-app
+  DEMO_APP_GIT_REPO: https://github.com/johnaohara/idc-quarkus-labs.git
+  DEMO_APP_GIT_BRANCH: vets
+  BUILD_COMMAND: make clean build
+  STOP_POD_COMMAND: make stop
+  POD_RESTART_COMMAND: make stop run
+
+  APP_SERVER: benchserver2G1
+  HYPERFOIL_HOST: benchclient1
+
+  TARGETS: [{name: "spring-boot", port: 8083},{name: "quarkus-jvm", port: 8084},{name: "quarkus-native", port: 8085}]
+  # TARGETS: [{name: "spring-boot", port: 8083}]
+  # USERS: [{count: 5, sharedConnections: 50}]
+  USERS: [{count: 1, sharedConnections: 4},{count: 5, sharedConnections: 20},{count: 10, sharedConnections: 40},{count: 15, sharedConnections: 60},{count: 20, sharedConnections: 80},{count: 25, sharedConnections: 100},{count: 30, sharedConnections: 120},{count: 35, sharedConnections: 140},{count: 40, sharedConnections: 160}]
+
+  Xmx: 64mb
+

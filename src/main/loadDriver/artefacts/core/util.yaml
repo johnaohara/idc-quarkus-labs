@@ -1,0 +1,16 @@
+name: general utility scripts
+scripts:
+
+  sync-time:
+    - sh: sudo ntpdate -u clock.redhat.com
+
+  set-java: # JAVA_PATH
+    - sh: export JAVA_HOME="${{JAVA_PATH}}"
+    - sh: export JAVA="${{JAVA_PATH}}/bin/java"
+    - sh: export PATH="${JAVA_HOME}/bin:${PATH}"
+
+  kill-grep: # GREP
+    - sh: ps -ef | grep ${{GREP}} | grep -v grep | awk '{print $2}' | xargs -r kill
+
+  java-opts: # OPTS
+    - sh: export JAVA_OPTS="$JAVA_OPTS ${{OPTS}}"
