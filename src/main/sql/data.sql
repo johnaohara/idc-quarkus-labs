@@ -1,6 +1,6 @@
 INSERT INTO Category(id,name) VALUES (1, 'Work');
-INSERT INTO Category(id,name) VALUES (1, 'Private');
-INSERT INTO Category(id,name) VALUES (1, 'Family');
+INSERT INTO Category(id,name) VALUES (2, 'Private');
+INSERT INTO Category(id,name) VALUES (3, 'Family');
 
 INSERT INTO Todo_User(id,firstname,surname,email) VALUES (1, 'Thomas','Qvarnstrom','no-reply@redhat.com');
 INSERT INTO Todo_User(id,firstname,surname,email) VALUES (2, 'John','OHare','no-reply@redhat.com');

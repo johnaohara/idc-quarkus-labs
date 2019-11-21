@@ -1,8 +1,13 @@
+DROP TABLE IF EXISTS Todo_Categories;
+DROP TABLE IF EXISTS Todo;
+DROP TABLE IF EXISTS Todo_User;
+DROP TABLE IF EXISTS Category;
+
 CREATE TABLE Category (
   id int8 NOT NULL,
   name VARCHAR(255),
   PRIMARY KEY(id),
-  UNIQUE (title)
+  UNIQUE (name)
 );
 
 CREATE TABLE Todo_User (
