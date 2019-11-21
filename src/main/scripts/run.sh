@@ -51,7 +51,8 @@ if [ $# -eq 1 ]
     lab=true
 else
     psql_db_host=localhost
-    network_config="--network=${container_network_name} -p 5432:5432"
+#    network_config="--network=${container_network_name} -p 5432:5432"
+    network_config="--network=${container_network_name}"
     lab=false
 fi
 
@@ -96,11 +97,11 @@ function create_container {
  
   printf "Starting ${image} container using port ${port} "
 
-  if [ "$lab" = true ] ; then
+#  if [ "$lab" = true ] ; then
     ${container_runtime} run -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} --network=host --name=${name} ${env} ${image} > /dev/null
-  else
-    ${container_runtime} run -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} -p ${port}:${port} --network=${container_network_name} --name=${name} ${env} ${image} > /dev/null
-  fi
+#  else
+#    ${container_runtime} run -d --rm --cpus=${container_cpu_limit} --memory=${container_memory_limit} -p ${port}:${port} --network=${container_network_name} --name=${name} ${env} ${image} > /dev/null
+#  fi
 
   while ! (curl -sf http://localhost:${port}/api > /dev/null)
   do
