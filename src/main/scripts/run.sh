@@ -29,7 +29,7 @@ container_quarkus_native_port=8082
 container_quarkus_native_image=quarkus-native/todo
 
 container_cpu_limit=4
-container_memory_limit=256M
+container_memory_limit=512M
 
 psql_db_name=todo-db
 psql_db_user=todo
