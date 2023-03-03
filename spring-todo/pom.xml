@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.6.3</version>
+		<version>2.7.9</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -17,7 +17,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<repackage.classifier/>
-		<spring-native.version>0.11.2</spring-native.version>
+		<spring-native.version>0.12.2</spring-native.version>
 	</properties>
 
 	<!-- include Spring repos for latest releases -->
@@ -73,7 +73,6 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.2.8</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -137,7 +136,7 @@
 			<id>native</id>
 			<properties>
 				<repackage.classifier>exec</repackage.classifier>
-				<native-buildtools.version>0.9.3</native-buildtools.version>
+				<native-buildtools.version>0.9.20</native-buildtools.version>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -150,9 +149,30 @@
 			<build>
 				<plugins>
 					<plugin>
+						<groupId>org.hibernate.orm.tooling</groupId>
+						<artifactId>hibernate-enhance-maven-plugin</artifactId>
+						<version>${hibernate.version}</version>
+						<executions>
+							<execution>
+								<id>enhance</id>
+								<goals>
+									<goal>enhance</goal>
+								</goals>
+								<configuration>
+									<failOnError>true</failOnError>
+									<enableLazyInitialization>true</enableLazyInitialization>
+									<enableDirtyTracking>true</enableDirtyTracking>
+									<enableAssociationManagement>true</enableAssociationManagement>
+									<enableExtendedEnhancement>false</enableExtendedEnhancement>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 						<groupId>org.graalvm.buildtools</groupId>
 						<artifactId>native-maven-plugin</artifactId>
 						<version>${native-buildtools.version}</version>
+						<extensions>true</extensions>
 						<executions>
 <!--							<execution>
 								<id>test-native</id>
