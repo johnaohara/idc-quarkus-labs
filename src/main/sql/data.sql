@@ -1,4 +1,4 @@
-INSERT INTO Category(id,name) VALUES (nextval('hibernate_sequence'), 'Work'); 
+INSERT INTO Category(id,name) VALUES (nextval('hibernate_sequence'), 'Work');
 INSERT INTO Category(id,name) VALUES (nextval('hibernate_sequence'), 'Private');
 INSERT INTO Category(id,name) VALUES (nextval('hibernate_sequence'), 'Family');
 

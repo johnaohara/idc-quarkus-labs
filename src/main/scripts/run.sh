@@ -58,13 +58,12 @@ function run_database_script {
 
 function create_database_container {
   printf "Starting PostgreSQL with name ${container_db_name} "
-  ${container_runtime} run --ulimit memlock=-1:-1 -d --rm=true -p 5432:5432 \
+  ${container_runtime} run -d --rm=true -p 5432:5432 \
         --network=${container_network_name} \
-        --memory-swappiness=0 \
         --name ${container_db_name} \
         -e POSTGRES_USER=${psql_db_user} \
         -e POSTGRES_PASSWORD=${psql_db_password} \
-        -e POSTGRES_DB=${psql_db_name} postgres:10.5 > /dev/null
+        -e POSTGRES_DB=${psql_db_name} docker.io/library/postgres:13.0 > /dev/null
   # Waiting for the database to start
   while ! (${container_runtime} exec -it ${container_db_name} psql -U ${psql_db_user} ${psql_db_name} -c "select 1" > /dev/null 2>&1)
   do
