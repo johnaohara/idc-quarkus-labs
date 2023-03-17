@@ -11,5 +11,6 @@
     <modules>
         <module>quarkus-todo</module>
         <module>spring-todo</module>
+        <module>springboot3-todo</module>
     </modules>
 </project>
