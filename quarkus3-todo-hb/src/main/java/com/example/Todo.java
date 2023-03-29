@@ -8,7 +8,8 @@ import java.util.Set;
 public class Todo {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "todo_id_seq")
+    @SequenceGenerator(name = "todo_id_seq", sequenceName = "todo_id_seq")
     public Long id;
 
 

@@ -27,8 +27,11 @@ CREATE TABLE Todo_Categories (
     category_id BIGINT NOT NULL,
     PRIMARY KEY(todo_id, category_id)
 );
-    
+
 CREATE SEQUENCE hibernate_sequence START WITH 1 increment BY 1;
+CREATE SEQUENCE todo_id_seq START WITH 1 increment BY 1;
+CREATE SEQUENCE user_id_seq START WITH 1 increment BY 1;
+CREATE SEQUENCE cat_id_seq START WITH 1 increment BY 1;
 ALTER TABLE IF EXISTS Todo ADD CONSTRAINT unique_title_constraint unique (title);
 ALTER TABLE Todo ADD CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES todo_user;
 ALTER TABLE Todo_Categories ADD CONSTRAINT fk_category_id FOREIGN KEY(category_id) REFERENCES Category;
