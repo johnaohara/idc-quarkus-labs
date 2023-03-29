@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>todo</artifactId>
+	<artifactId>springboot3-todo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>demo-springboot3</name>
+	<name>springboot3-todo</name>
 	<description>Demo project for Spring Boot 3</description>
 
 	<properties>
