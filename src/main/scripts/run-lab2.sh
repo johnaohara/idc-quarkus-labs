@@ -60,7 +60,7 @@ function create_database_container {
   printf "Starting PostgreSQL with name ${container_db_name} "
   ${container_runtime} run --ulimit memlock=-1:-1 -d --rm=true -p 5432:5432 \
         --network=${container_network_name} \
-        --memory-swappiness=0 \
+#        --memory-swappiness=0 \
         --name ${container_db_name} \
         -e POSTGRES_USER=${psql_db_user} \
         -e POSTGRES_PASSWORD=${psql_db_password} \
