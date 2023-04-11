@@ -63,7 +63,7 @@ function create_database_container {
         --name ${container_db_name} \
         -e POSTGRES_USER=${psql_db_user} \
         -e POSTGRES_PASSWORD=${psql_db_password} \
-        -e POSTGRES_DB=${psql_db_name} postgres:10.5 > /dev/null
+        -e POSTGRES_DB=${psql_db_name} postgres:14 > /dev/null
   # Waiting for the database to start
   while ! (${container_runtime} exec -it ${container_db_name} psql -U ${psql_db_user} ${psql_db_name} -c "select 1" > /dev/null 2>&1)
   do
