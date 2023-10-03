@@ -15,6 +15,8 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -63,11 +65,12 @@ class TodoControllerTests {
 		}
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = { "/api", "/api/" })
 	@Order(DEFAULT_ORDER + 1)
-	public void getAll() throws Exception {
+	public void getAll(String path) throws Exception {
 		var todosToCheck = createTodos();
-		var todos = this.objectMapper.readValue(this.mockMvc.perform(get("/api"))
+		var todos = this.objectMapper.readValue(this.mockMvc.perform(get(path))
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON_VALUE))
 			.andReturn().getResponse().getContentAsString(), Todo[].class);
