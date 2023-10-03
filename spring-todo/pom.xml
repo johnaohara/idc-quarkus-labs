@@ -20,12 +20,12 @@
 		<spring-native.version>0.12.2</spring-native.version>
 	</properties>
 
-	<!-- include Spring repos for latest releases -->
+	<!-- include Spring repos for milestone releases -->
 	<repositories>
 		<repository>
-			<id>spring-releases</id>
-			<name>Spring Releases</name>
-			<url>https://repo.spring.io/release</url>
+			<id>spring-milestone</id>
+			<name>Spring Milestone</name>
+			<url>https://repo.spring.io/milestone</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
@@ -33,9 +33,9 @@
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
-			<id>spring-releases</id>
-			<name>Spring Releases</name>
-			<url>https://repo.spring.io/release</url>
+			<id>spring-milestone</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
