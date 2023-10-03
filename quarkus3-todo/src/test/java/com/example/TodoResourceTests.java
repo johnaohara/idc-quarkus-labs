@@ -16,6 +16,8 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.h2.H2DatabaseTestResource;
@@ -54,11 +56,12 @@ class TodoResourceTests {
 		});
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = { "/api", "/api/" })
 	@Order(DEFAULT_ORDER + 1)
-	public void getAll() {
+	public void getAll(String path) {
 		var todosToCheck = createTodos();
-		var todos = get("/api").then()
+		var todos = get(path).then()
 			.statusCode(Status.OK.getStatusCode())
 			.contentType(ContentType.JSON)
 			.extract().body()
