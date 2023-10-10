@@ -67,12 +67,10 @@ public class TodoController {
     private Mono<Todo> enrichTodo(Todo todo) {
         // This is needed because Spring Data R2DBC is not a fully-fledged ORM
         // and it does not support entity relationships
-        var userMono = this.todoRepository.getUserIdForTodo(todo.getId())
-          .flatMap(this.userRepository::findById)
+        var userMono = this.userRepository.findById(this.todoRepository.getUserIdForTodo(todo.getId()))
           .defaultIfEmpty(new User());
 
-        var categoriesMono = this.todoRepository.getCategoryIdsForTodo(todo.getId())
-          .flatMap(this.categoryRepository::findById)
+        var categoriesMono = this.categoryRepository.findAllById(this.todoRepository.getCategoryIdsForTodo(todo.getId()))
           .collectList()
           .map(LinkedHashSet::new)
           .defaultIfEmpty(new LinkedHashSet<>());
