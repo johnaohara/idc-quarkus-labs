@@ -83,8 +83,8 @@ public class TodoController {
           userMono,
           categoriesMono,
           (user, categories) -> todo.toBuilder()
-            .user(user)
-            .categories(categories)
+            .user((user.getId() != null) ? user : null)
+            .categories(!categories.isEmpty() ? categories : null)
             .build()
         ).defaultIfEmpty(todo);
     }
