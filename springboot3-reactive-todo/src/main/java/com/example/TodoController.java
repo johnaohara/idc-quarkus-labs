@@ -1,6 +1,7 @@
 package com.example;
 
 import java.util.HashSet;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,13 +66,19 @@ public class TodoController {
     }
 
     private Mono<Todo> enrichTodo(Todo todo) {
+        // This is needed because Spring Data R2DBC is not a fully-fledged ORM
+        // and it does not support entity relationships
         var userMono = this.todoRepository.getUserIdForTodo(todo.getId())
-          .flatMap(this.userRepository::findById);
+          .flatMap(this.userRepository::findById)
+          .defaultIfEmpty(new User());
 
         var categoriesMono = this.todoRepository.getCategoryIdsForTodo(todo.getId())
           .flatMap(this.categoryRepository::findById)
-          .collectList();
+          .collectList()
+          .defaultIfEmpty(List.of());
 
+        // Get the User & Categories in parallel
+        // Then merge their results back into the entity
         return Mono.zip(
           userMono,
           categoriesMono,
