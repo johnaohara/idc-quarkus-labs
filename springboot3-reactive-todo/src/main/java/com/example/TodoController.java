@@ -1,7 +1,6 @@
 package com.example;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,7 +74,8 @@ public class TodoController {
         var categoriesMono = this.todoRepository.getCategoryIdsForTodo(todo.getId())
           .flatMap(this.categoryRepository::findById)
           .collectList()
-          .defaultIfEmpty(List.of());
+          .map(LinkedHashSet::new)
+          .defaultIfEmpty(new LinkedHashSet<>());
 
         // Get the User & Categories in parallel
         // Then merge their results back into the entity
@@ -84,7 +84,7 @@ public class TodoController {
           categoriesMono,
           (user, categories) -> todo.toBuilder()
             .user(user)
-            .categories(new HashSet<>(categories))
+            .categories(categories)
             .build()
         ).defaultIfEmpty(todo);
     }
