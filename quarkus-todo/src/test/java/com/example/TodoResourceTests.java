@@ -70,7 +70,12 @@ class TodoResourceTests {
 		assertThat(todos)
 			.hasSameSizeAs(todosToCheck)
 			.usingRecursiveFieldByFieldElementComparatorOnFields("title", "completed", "order")
-			.containsExactlyElementsOf(todosToCheck);
+			.containsExactlyElementsOf(todosToCheck)
+			.allSatisfy(todo ->
+				assertThat(todo.id)
+					.isNotNull()
+					.isPositive()
+			);
 
 		todos.stream()
 			.forEach(todo -> TODOS.put(todo.id, todo));
@@ -92,7 +97,12 @@ class TodoResourceTests {
 		assertThat(todos)
 			.hasSameSizeAs(todosToCheck)
 			.usingRecursiveFieldByFieldElementComparatorOnFields("title", "completed", "order")
-			.containsExactlyElementsOf(todosToCheck);
+			.containsExactlyElementsOf(todosToCheck)
+			.allSatisfy(todo ->
+				assertThat(todo.id)
+					.isNotNull()
+					.isPositive()
+			);
 	}
 
 	@Test
