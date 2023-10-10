@@ -8,6 +8,8 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.smallrye.common.annotation.NonBlocking;
+
 @Path("/")
 public class ExampleResource {
 
@@ -17,6 +19,7 @@ public class ExampleResource {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
+    @NonBlocking
     public String hello() {
         return String.format("Hello, World from Quarkus running in %s !!!",runtime);
     }

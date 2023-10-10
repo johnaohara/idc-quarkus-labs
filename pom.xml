@@ -11,8 +11,10 @@
     <modules>
         <module>quarkus-todo</module>
         <module>quarkus3-todo</module>
+        <module>quarkus3-reactive-todo</module>
         <module>quarkus3-todo-hb</module>
         <module>spring-todo</module>
         <module>springboot3-todo</module>
+        <module>springboot3-reactive-todo</module>
     </modules>
 </project>

@@ -1,11 +1,11 @@
 CREATE TABLE Category (
-  id BIGINT NOT NULL,
+  id BIGSERIAL NOT NULL,
   name VARCHAR(255),
   PRIMARY KEY(id)
 );
 
 CREATE TABLE Todo_User (
-    id BIGINT NOT NULL,
+    id BIGSERIAL NOT NULL,
     email VARCHAR(255),
     firstname VARCHAR(255),
     surname VARCHAR(255),
@@ -13,7 +13,7 @@ CREATE TABLE Todo_User (
 );
     
 CREATE TABLE Todo (
-    id BIGINT NOT NULL,
+    id BIGSERIAL NOT NULL,
     completed BOOLEAN NOT NULL,
     ordering INTEGER,
     title VARCHAR(255),
@@ -29,7 +29,7 @@ CREATE TABLE Todo_Categories (
 );
 
 CREATE SEQUENCE hibernate_sequence START WITH 1 increment BY 1;
-CREATE SEQUENCE todo_id_seq START WITH 1 increment BY 1;
+CREATE SEQUENCE todo_seq START WITH 1 increment BY 1;
 CREATE SEQUENCE user_id_seq START WITH 1 increment BY 1;
 CREATE SEQUENCE cat_id_seq START WITH 1 increment BY 1;
 ALTER TABLE IF EXISTS Todo ADD CONSTRAINT unique_title_constraint unique (title);

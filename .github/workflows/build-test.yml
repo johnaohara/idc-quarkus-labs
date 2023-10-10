@@ -33,9 +33,11 @@ jobs:
         project:
           - quarkus3-todo
           - quarkus3-todo-hb
+          - quarkus3-reactive-todo
           - quarkus-todo
           - spring-todo
           - springboot3-todo
+          - springboot3-reactive-todo
     name: build-test-${{ matrix.project }}
     steps:
       - uses: actions/checkout@v3
