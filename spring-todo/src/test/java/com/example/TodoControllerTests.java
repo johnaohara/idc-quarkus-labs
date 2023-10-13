@@ -78,7 +78,12 @@ class TodoControllerTests {
 		assertThat(todos)
 			.hasSameSizeAs(todosToCheck)
 			.usingRecursiveFieldByFieldElementComparatorOnFields("title", "completed", "order")
-			.containsExactlyElementsOf(todosToCheck);
+			.containsExactlyElementsOf(todosToCheck)
+			.allSatisfy(todo ->
+				assertThat(todo.getId())
+					.isNotNull()
+					.isPositive()
+			);
 
 		Arrays.stream(todos)
 			.forEach(todo -> TODOS.put(todo.getId(), todo));
@@ -99,7 +104,12 @@ class TodoControllerTests {
 		assertThat(todos)
 			.hasSameSizeAs(todosToCheck)
 			.usingRecursiveFieldByFieldElementComparatorOnFields("title", "completed", "order")
-			.containsExactlyElementsOf(todosToCheck);
+			.containsExactlyElementsOf(todosToCheck)
+			.allSatisfy(todo ->
+				assertThat(todo.getId())
+					.isNotNull()
+					.isPositive()
+			);
 	}
 
 	@Test
